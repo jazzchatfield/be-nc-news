@@ -64,6 +64,102 @@ describe("formatDates", () => {
   });
 });
 
-describe("makeRefObj", () => {});
+describe("makeRefObj", () => {
+  it("returns a new object when provided with an array of objects", () => {
+    let list = [{ title: "hello", article_id: 55 }];
+    let result = makeRefObj(list);
+    expect(result).to.be.an("object");
+  });
+  it("returns a ref object when provided with an array of one object", () => {
+    let list = [{ title: "hello", article_id: 55 }];
+    let result = makeRefObj(list);
+    let expected = { hello: 55 };
+    expect(result).to.eql(expected);
+  });
+  it("returns a ref object when provided with an array of multiple objects", () => {
+    let list = [
+      { title: "hello", article_id: 55 },
+      {
+        title:
+          "i have descended from the depths of hell to gift judgement unto the mortal world",
+        article_id: 666
+      },
+      { title: "lol", article_id: 69 }
+    ];
+    let result = makeRefObj(list);
+    let expected = {
+      hello: 55,
+      "i have descended from the depths of hell to gift judgement unto the mortal world": 666,
+      lol: 69
+    };
+    expect(result).to.eql(expected);
+  });
+});
 
-describe("formatComments", () => {});
+describe("formatComments", () => {
+  it("formats comments", () => {
+    let refObj = {
+      hello: 55,
+      "i have descended from the depths of hell to gift judgement unto the mortal world": 666,
+      lol: 69
+    };
+    let unformattedComments = [
+      {
+        body:
+          "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!",
+        belongs_to: "lol",
+        created_by: "butter_bridge",
+        votes: 16,
+        created_at: 1511354163389
+      },
+      {
+        body:
+          "The beautiful thing about treasure is that it exists. Got to find out what kind of sheets these are; not cotton, not rayon, silky.",
+        belongs_to:
+          "i have descended from the depths of hell to gift judgement unto the mortal world",
+        created_by: "butter_bridge",
+        votes: 14,
+        created_at: 1479818163389
+      },
+      {
+        body:
+          "Replacing the quiet elegance of the dark suit and tie with the casual indifference of these muted earth tones is a form of fashion suicide, but, uh, call me crazy — onyou it works.",
+        belongs_to: "hello",
+        created_by: "icellusedkars",
+        votes: 100,
+        created_at: 1448282163389
+      }
+    ];
+    let result = formatComments(unformattedComments, refObj);
+    let expected = [
+      {
+        body:
+          "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!",
+        article_id: 69,
+        author: "butter_bridge",
+        votes: 16,
+        created_at: 1511354163389
+      },
+      {
+        body:
+          "The beautiful thing about treasure is that it exists. Got to find out what kind of sheets these are; not cotton, not rayon, silky.",
+        article_id: 666,
+        author: "butter_bridge",
+        votes: 14,
+        created_at: 1479818163389
+      },
+      {
+        body:
+          "Replacing the quiet elegance of the dark suit and tie with the casual indifference of these muted earth tones is a form of fashion suicide, but, uh, call me crazy — onyou it works.",
+        article_id: 55,
+        author: "icellusedkars",
+        votes: 100,
+        created_at: 1448282163389
+      }
+    ];
+    expected.forEach(comment => {
+      comment.created_at = new Date(comment.created_at);
+    });
+    expect(result).to.eql(expected);
+  });
+});
