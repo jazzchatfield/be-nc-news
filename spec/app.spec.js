@@ -21,4 +21,42 @@ describe("/api", () => {
         });
     });
   });
+  describe("/users", () => {
+    describe("/:username", () => {
+      it("GET 200 responds with user by username", () => {
+        return request(app)
+          .get("/api/users/lurker")
+          .expect(200)
+          .then(res => {
+            expect(res.body.user).to.eql({
+              username: "lurker",
+              name: "do_nothing",
+              avatar_url:
+                "https://www.golenbock.com/wp-content/uploads/2015/01/placeholder-user.png"
+            });
+          });
+      });
+    });
+  });
+  describe("/articles", () => {
+    describe("/:article_id", () => {
+      it("GET 200 responds with article by article_id", () => {
+        return request(app)
+          .get("/api/articles/3")
+          .expect(200)
+          .then(res => {
+            expect(res.body.article).to.have.keys(
+              "article_id",
+              "title",
+              "body",
+              "votes",
+              "topic",
+              "author",
+              "created_at",
+              "comment_count"
+            );
+          });
+      });
+    });
+  });
 });
