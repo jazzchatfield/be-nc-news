@@ -11,7 +11,10 @@ const connection = require("../db/connection");
 chai.use(chaiSorted);
 
 describe("/api", () => {
-  // something weird happening with the below - reseeding wrong
+  /* something weird happening with beforeEach
+    only works the first time it seeds
+    then subsequent times some of the field are null
+  */
   // beforeEach(() => connection.seed.run());
   after(() => connection.destroy());
   describe("/topics", () => {
@@ -24,8 +27,32 @@ describe("/api", () => {
           expect(res.body.topics[0]).to.contain.keys("slug", "description");
         });
     });
+    it("PATCH/POST/DELETE 405 method not allowed", () => {
+      const invalidMethods = ["patch", "post", "delete"];
+      const promiseArray = invalidMethods.map(method => {
+        return request(app)
+          [method]("/api/topics")
+          .expect(405)
+          .then(({ body }) => {
+            expect(body.msg).to.equal("Method not allowed");
+          });
+      });
+      return Promise.all(promiseArray);
+    });
   });
   describe("/users", () => {
+    it("GET/PATCH/POST/DELETE 405 method not allowed", () => {
+      const invalidMethods = ["get", "patch", "post", "delete"];
+      const promiseArray = invalidMethods.map(method => {
+        return request(app)
+          [method]("/api/users")
+          .expect(405)
+          .then(({ body }) => {
+            expect(body.msg).to.equal("Method not allowed");
+          });
+      });
+      return Promise.all(promiseArray);
+    });
     describe("/:username", () => {
       it("GET 200 responds with user by username", () => {
         return request(app)
@@ -40,6 +67,18 @@ describe("/api", () => {
             });
           });
       });
+      it("POST/PATCH/DELETE 405 method not allowed", () => {
+        const invalidMethods = ["patch", "post", "delete"];
+        const promiseArray = invalidMethods.map(method => {
+          return request(app)
+            [method]("/api/users/lurker")
+            .expect(405)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("Method not allowed");
+            });
+        });
+        return Promise.all(promiseArray);
+      });
     });
   });
   describe("/articles", () => {
@@ -48,7 +87,6 @@ describe("/api", () => {
         .get("/api/articles")
         .expect(200)
         .then(res => {
-          console.log(res.body);
           expect(res.body.articles[0]).to.have.keys(
             "author",
             "title",
@@ -68,7 +106,6 @@ describe("/api", () => {
         .get("/api/articles?sort_by=votes&order=asc&author=butter_bridge")
         .expect(200)
         .then(res => {
-          console.log(res.body);
           expect(res.body.articles[0]).to.have.keys(
             "author",
             "title",
@@ -84,6 +121,18 @@ describe("/api", () => {
           });
           expect(parsedArticles).to.be.sortedBy("votes");
         });
+    });
+    it("PATCH/POST/DELETE 405 method not allowed", () => {
+      const invalidMethods = ["patch", "post", "delete"];
+      const promiseArray = invalidMethods.map(method => {
+        return request(app)
+          [method]("/api/articles")
+          .expect(405)
+          .then(({ body }) => {
+            expect(body.msg).to.equal("Method not allowed");
+          });
+      });
+      return Promise.all(promiseArray);
     });
     describe("/:article_id", () => {
       it("GET 200 responds with article by article_id", () => {
@@ -123,6 +172,18 @@ describe("/api", () => {
               "created_at"
             );
           });
+      });
+      it("POST/DELETE 405 method not allowed", () => {
+        const invalidMethods = ["post", "delete"];
+        const promiseArray = invalidMethods.map(method => {
+          return request(app)
+            [method]("/api/articles/1")
+            .expect(405)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("Method not allowed");
+            });
+        });
+        return Promise.all(promiseArray);
       });
       describe("/comments", () => {
         it("POST 200 posts new comment and returns posted comment", () => {
@@ -177,6 +238,71 @@ describe("/api", () => {
               expect(res.body.comments).to.be.sortedBy("author");
             });
         });
+        it("PATCH/DELETE 405 method not allowed", () => {
+          const invalidMethods = ["patch", "delete"];
+          const promiseArray = invalidMethods.map(method => {
+            return request(app)
+              [method]("/api/articles/1/comments")
+              .expect(405)
+              .then(({ body }) => {
+                expect(body.msg).to.equal("Method not allowed");
+              });
+          });
+          return Promise.all(promiseArray);
+        });
+      });
+    });
+  });
+  describe("/comments", () => {
+    it("GET/PATCH/POST/DELETE 405 method not allowed", () => {
+      const invalidMethods = ["get", "patch", "post", "delete"];
+      const promiseArray = invalidMethods.map(method => {
+        return request(app)
+          [method]("/api/comments")
+          .expect(405)
+          .then(({ body }) => {
+            expect(body.msg).to.equal("Method not allowed");
+          });
+      });
+      return Promise.all(promiseArray);
+    });
+    describe("/:comment_id", () => {
+      it("PATCH 200 responds with updated comment", () => {
+        return request(app)
+          .patch("/api/comments/1")
+          .set("Content-Type", "application/json")
+          .send('{"inc_votes":"10"}')
+          .expect(200)
+          .then(res => {
+            let result = res.body.updated.votes;
+            let expected = 26;
+            expect(result).to.equal(expected);
+            expect(res.body.updated).to.have.keys(
+              "comment_id",
+              "author",
+              "article_id",
+              "votes",
+              "created_at",
+              "body"
+            );
+          });
+      });
+      it("DELETE 204 deletes given comment", () => {
+        return request(app)
+          .delete("/api/comments/1")
+          .expect(204);
+      });
+      it("GET/POST 405 method not allowed", () => {
+        const invalidMethods = ["get", "post"];
+        const promiseArray = invalidMethods.map(method => {
+          return request(app)
+            [method]("/api/comments/5")
+            .expect(405)
+            .then(({ body }) => {
+              expect(body.msg).to.equal("Method not allowed");
+            });
+        });
+        return Promise.all(promiseArray);
       });
     });
   });
