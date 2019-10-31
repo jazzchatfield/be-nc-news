@@ -8,8 +8,11 @@ const chaiSorted = require("chai-sorted");
 const app = require("../app");
 const connection = require("../db/connection");
 
+chai.use(chaiSorted);
+
 describe("/api", () => {
-  beforeEach(() => connection.seed.run());
+  // something weird happening with the below - reseeding wrong
+  // beforeEach(() => connection.seed.run());
   after(() => connection.destroy());
   describe("/topics", () => {
     it("GET 200 responds with an array of topic objects", () => {
@@ -40,6 +43,48 @@ describe("/api", () => {
     });
   });
   describe("/articles", () => {
+    it("GET 200 responds with articles when not provided queries", () => {
+      return request(app)
+        .get("/api/articles")
+        .expect(200)
+        .then(res => {
+          console.log(res.body);
+          expect(res.body.articles[0]).to.have.keys(
+            "author",
+            "title",
+            "article_id",
+            "topic",
+            "created_at",
+            "votes",
+            "comment_count"
+          );
+          expect(res.body.articles).to.be.sortedBy("created_at", {
+            descending: true
+          });
+        });
+    });
+    it("GET 200 responds with articles when provided queries", () => {
+      return request(app)
+        .get("/api/articles?sort_by=votes&order=asc&author=butter_bridge")
+        .expect(200)
+        .then(res => {
+          console.log(res.body);
+          expect(res.body.articles[0]).to.have.keys(
+            "author",
+            "title",
+            "article_id",
+            "topic",
+            "created_at",
+            "votes",
+            "comment_count"
+          );
+          let parsedArticles = res.body.articles.map(article => {
+            article.votes = parseInt(article.votes);
+            return article;
+          });
+          expect(parsedArticles).to.be.sortedBy("votes");
+        });
+    });
     describe("/:article_id", () => {
       it("GET 200 responds with article by article_id", () => {
         return request(app)
@@ -95,6 +140,41 @@ describe("/api", () => {
                 "created_at",
                 "body"
               );
+            });
+        });
+        it("GET 200 returns array of comments for given article_id", () => {
+          return request(app)
+            .get("/api/articles/1/comments")
+            .expect(200)
+            .then(res => {
+              expect(res.body.comments[0]).to.have.keys(
+                "comment_id",
+                "votes",
+                "created_at",
+                "author",
+                "body"
+              );
+            });
+        });
+        it("GET 200 sorts by created_at as default", () => {
+          return request(app)
+            .get("/api/articles/1/comments")
+            .expect(200)
+            .then(res => {
+              let parsedComments = res.body.comments.map(comment => {
+                parseInt();
+              });
+              expect(res.body.comments).to.be.sortedBy("created_at", {
+                descending: true
+              });
+            });
+        });
+        it("GET 200 takes sort_by and order queries", () => {
+          return request(app)
+            .get("/api/articles/1/comments?sort_by=author&order=asc")
+            .expect(200)
+            .then(res => {
+              expect(res.body.comments).to.be.sortedBy("author");
             });
         });
       });

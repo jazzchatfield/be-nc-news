@@ -43,8 +43,61 @@ const createCommentByArticle = (article_id, username, body) => {
     });
 };
 
+const fetchCommentsByArticle = (article_id, sort_by, order) => {
+  return connection
+    .select("*")
+    .from("comments")
+    .where({ article_id })
+    .orderBy(sort_by, order)
+    .then(rows => {
+      return rows.map(row => {
+        delete row.article_id;
+        return row;
+      });
+    });
+};
+
+const fetchArticles = (sort_by, order, author, topic) => {
+  return connection
+    .select("author", "title", "article_id", "topic", "created_at", "votes")
+    .from("articles")
+    .modify(function(queryBuilder) {
+      if (author !== undefined) {
+        queryBuilder.where({ author });
+      }
+      if (topic !== undefined) {
+        queryBuilder.where({ topic });
+      }
+    })
+    .orderBy(sort_by, order)
+    .then(rows => {
+      let promiseArray = rows.map(row => {
+        return connection
+          .select("*")
+          .from("comments")
+          .where({ article_id: row.article_id });
+      });
+      return Promise.all([rows, ...promiseArray]);
+    })
+    .then(([rows, ...promiseArray]) => {
+      let array = [rows, ...promiseArray];
+      for (let i = 1; i < array.length; i++) {
+        rows[i - 1].comment_count = array[i].length;
+      }
+      return rows;
+    });
+
+  // if (author !== undefined || topic !== undefined) {
+  //   connectionToReturn.where({ author, topic });
+  // }
+
+  // return connectionToReturn;
+};
+
 module.exports = {
   fetchArticleById,
   updateArticleVotesById,
-  createCommentByArticle
+  createCommentByArticle,
+  fetchCommentsByArticle,
+  fetchArticles
 };

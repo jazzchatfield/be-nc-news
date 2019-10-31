@@ -2,16 +2,23 @@ const express = require("express");
 const {
   getArticleById,
   patchArticleVotesById,
-  postCommentByArticle
+  postCommentByArticle,
+  getCommentsByArticle,
+  getArticles
 } = require("../controllers/articles");
 
 const articlesRouter = express.Router();
+
+articlesRouter.route("/").get(getArticles);
 
 articlesRouter
   .route("/:article_id")
   .get(getArticleById)
   .patch(patchArticleVotesById);
 
-articlesRouter.post("/:article_id/comments", postCommentByArticle);
+articlesRouter
+  .route("/:article_id/comments")
+  .post(postCommentByArticle)
+  .get(getCommentsByArticle);
 
 module.exports = articlesRouter;

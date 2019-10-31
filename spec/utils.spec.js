@@ -1,9 +1,12 @@
+process.env.NODE_ENV = "test";
+
 const { expect } = require("chai");
 const {
   formatDates,
   makeRefObj,
   formatComments
 } = require("../db/utils/utils");
+const { commentData } = require("../db/data");
 
 describe("formatDates", () => {
   it("returns a new array", () => {
@@ -161,5 +164,23 @@ describe("formatComments", () => {
       comment.created_at = new Date(comment.created_at);
     });
     expect(result).to.eql(expected);
+  });
+  it("formats comments intended for seed", () => {
+    let refObj = {
+      "Living in the shadow of a great man": 1,
+      "Sony Vaio; or, The Laptop": 2,
+      "Eight pug gifs that remind me of mitch": 3,
+      "Student SUES Mitch!": 4,
+      "UNCOVERED: catspiracy to bring down democracy": 5,
+      A: 6,
+      Z: 7,
+      "Does Mitch predate civilisation?": 8,
+      "They're not exactly dogs, are they?": 9,
+      "Seven inspirational thought leaders from Manchester UK": 10,
+      "Am I a cat?": 11,
+      Moustache: 12
+    };
+    let result = formatComments(commentData, refObj);
+    console.log(result);
   });
 });
