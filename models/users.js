@@ -6,7 +6,9 @@ const fetchUserByUsername = username => {
     .from("users")
     .where({ username })
     .then(data => {
-      return data[0];
+      if (data.length === 0) {
+        return { err: { status: 422, msg: "username not found" } };
+      } else return data[0];
     });
 };
 

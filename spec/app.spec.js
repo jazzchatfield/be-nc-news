@@ -67,6 +67,14 @@ describe("/api", () => {
             });
           });
       });
+      it("GET 422 username not found", () => {
+        return request(app)
+          .get("/api/users/jasmine")
+          .expect(422)
+          .then(res => {
+            expect(res.body.msg).to.eql("username not found");
+          });
+      });
       it("POST/PATCH/DELETE 405 method not allowed", () => {
         const invalidMethods = ["patch", "post", "delete"];
         const promiseArray = invalidMethods.map(method => {
@@ -122,6 +130,32 @@ describe("/api", () => {
           expect(parsedArticles).to.be.sortedBy("votes");
         });
     });
+    it("GET 400 sort_by invalid", () => {
+      return request(app)
+        .get("/api/articles?sort_by=sofjwfn")
+        .expect(400)
+        .then(res => {
+          expect(res.body.msg).to.equal("sort_by column does not exist");
+        });
+    });
+    it("GET 400 order invalid", () => {
+      return request(app)
+        .get("/api/articles?sort_by=votes&order=blah")
+        .expect(400)
+        .then(res => expect(res.body.msg).to.equal("order_by invalid"));
+    });
+    it("GET 405 author or topic does not exist", () => {
+      return request(app)
+        .get("/api/articles?author=aoifhgqpj")
+        .expect(400)
+        .then(res => {
+          expect(res.body.msg).to.equal("author or topic does not exist");
+          return request(app).get("/api/articles?topic=sofihjwsif");
+        })
+        .then(res => {
+          expect(res.body.msg).to.equal("author or topic does not exist");
+        });
+    });
     it("PATCH/POST/DELETE 405 method not allowed", () => {
       const invalidMethods = ["patch", "post", "delete"];
       const promiseArray = invalidMethods.map(method => {
@@ -152,6 +186,22 @@ describe("/api", () => {
             );
           });
       });
+      it("GET 400 invalid article id format", () => {
+        return request(app)
+          .get("/api/articles/oajfwi")
+          .expect(400)
+          .then(res => {
+            expect(res.body.msg).to.equal("invalid format");
+          });
+      });
+      it("GET 405 no such article", () => {
+        return request(app)
+          .get("/api/articles/9284098")
+          .expect(405)
+          .then(res => {
+            expect(res.body.msg).to.equal("article does not exist");
+          });
+      });
       it("PATCH 200 updates votes count and returns updated article", () => {
         return request(app)
           .patch("/api/articles/1")
@@ -171,6 +221,36 @@ describe("/api", () => {
               "author",
               "created_at"
             );
+          });
+      });
+      it("PATCH 400 invalid article id format", () => {
+        return request(app)
+          .patch("/api/articles/sofhw")
+          .set("Content-Type", "application/json")
+          .send('{"inc_votes":"1"}')
+          .expect(400)
+          .then(res => {
+            expect(res.body.msg).to.equal("invalid format");
+          });
+      });
+      it("PATCH 422 no such article", () => {
+        return request(app)
+          .patch("/api/articles/3498")
+          .set("Content-Type", "application/json")
+          .send('{"inc_votes":"1"}')
+          .expect(405)
+          .then(res => {
+            expect(res.body.msg).to.equal("article does not exist");
+          });
+      });
+      it("PATCH 400 body invalid format", () => {
+        return request(app)
+          .patch("/api/articles/1")
+          .set("Content-Type", "application/json")
+          .send('{"inc_vsdfbnotes":"5"}')
+          .expect(400)
+          .then(res => {
+            expect(res.body.msg).to.equal("invalid format");
           });
       });
       it("POST/DELETE 405 method not allowed", () => {
@@ -203,6 +283,48 @@ describe("/api", () => {
               );
             });
         });
+        it("POST 400 body does not contain username and body", () => {
+          return request(app)
+            .post("/api/articles/1/comments")
+            .set("Content-Type", "application/json")
+            .send('{"body":"This is very good"}')
+            .expect(400)
+            .then(res => {
+              expect(res.body.msg).to.equal(
+                "body does not contain all required information"
+              );
+            });
+        });
+        it("POST 400 article id does not exist", () => {
+          return request(app)
+            .post("/api/articles/138534342/comments")
+            .set("Content-Type", "application/json")
+            .send('{"username":"lurker","body":"This is very good"}')
+            .expect(422)
+            .then(res => {
+              expect(res.body.msg).to.equal("article does not exist");
+            });
+        });
+        it("POST 400 article id in wrong format", () => {
+          return request(app)
+            .post("/api/articles/fjklsn/comments")
+            .set("Content-Type", "application/json")
+            .send('{"username":"lurker","body":"This is very good"}')
+            .expect(400)
+            .then(res => {
+              expect(res.body.msg).to.equal("invalid format");
+            });
+        });
+        it("POST 400 username does not exist", () => {
+          return request(app)
+            .post("/api/articles/1/comments")
+            .set("Content-Type", "application/json")
+            .send('{"username":"ofhwiohgs","body":"This is very good"}')
+            .expect(422)
+            .then(res => {
+              expect(res.body.msg).to.equal("username does not exist");
+            });
+        });
         it("GET 200 returns array of comments for given article_id", () => {
           return request(app)
             .get("/api/articles/1/comments")
@@ -215,6 +337,14 @@ describe("/api", () => {
                 "author",
                 "body"
               );
+            });
+        });
+        it("GET 400 article_id invalid format", () => {
+          return request(app)
+            .get("/api/articles/ofieelkjf/comments")
+            .expect(400)
+            .then(res => {
+              expect(res.body.msg).to.equal("invalid format");
             });
         });
         it("GET 200 sorts by created_at as default", () => {
@@ -230,12 +360,44 @@ describe("/api", () => {
               });
             });
         });
+        it("GET 422 value is too large", () => {
+          return request(app)
+            .get("/api/articles/3829048290/comments")
+            .expect(422)
+            .then(res => {
+              expect(res.body.msg).to.equal("value is too large");
+            });
+        });
+        it("GET 422 no comments found", () => {
+          return request(app)
+            .get("/api/articles/3829/comments")
+            .expect(422)
+            .then(res => {
+              expect(res.body.msg).to.equal("no comments found");
+            });
+        });
         it("GET 200 takes sort_by and order queries", () => {
           return request(app)
             .get("/api/articles/1/comments?sort_by=author&order=asc")
             .expect(200)
             .then(res => {
               expect(res.body.comments).to.be.sortedBy("author");
+            });
+        });
+        it("GET 400 order_by invalid", () => {
+          return request(app)
+            .get("/api/articles/1/comments?sort_by=author&order=blah")
+            .expect(400)
+            .then(res => {
+              expect(res.body.msg).to.equal("order_by invalid");
+            });
+        });
+        it("GET 400 sort_by invalid column", () => {
+          return request(app)
+            .get("/api/articles/1/comments?sort_by=blah&order=asc")
+            .expect(400)
+            .then(res => {
+              expect(res.body.msg).to.equal("sort_by column does not exist");
             });
         });
         it("PATCH/DELETE 405 method not allowed", () => {
@@ -287,10 +449,38 @@ describe("/api", () => {
             );
           });
       });
+      it("PATCH 400 comment_id invalid", () => {
+        return request(app)
+          .patch("/api/comments/flksjfs")
+          .set("Content-Type", "application/json")
+          .send('{"inc_votes":"10"}')
+          .expect(400)
+          .then(res => {
+            expect(res.body.msg).to.equal("invalid format");
+          });
+      });
+      it("PATCH 422 comment_id does not exist", () => {
+        return request(app)
+          .patch("/api/comments/3987")
+          .set("Content-Type", "application/json")
+          .send('{"inc_votes":"10"}')
+          .expect(422)
+          .then(res => {
+            expect(res.body.msg).to.equal("comment does not exist");
+          });
+      });
       it("DELETE 204 deletes given comment", () => {
         return request(app)
           .delete("/api/comments/1")
           .expect(204);
+      });
+      it("DELETE 400 comment_id invalid", () => {
+        return request(app)
+          .delete("/api/comments/fklhs")
+          .expect(400)
+          .then(res => {
+            expect(res.body.msg).to.equal("invalid format");
+          });
       });
       it("GET/POST 405 method not allowed", () => {
         const invalidMethods = ["get", "post"];
