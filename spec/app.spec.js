@@ -11,11 +11,7 @@ const connection = require("../db/connection");
 chai.use(chaiSorted);
 
 describe("/api", () => {
-  /* something weird happening with beforeEach
-    only works the first time it seeds
-    then subsequent times some of the field are null
-  */
-  // beforeEach(() => connection.seed.run());
+  beforeEach(() => connection.seed.run());
   after(() => connection.destroy());
   describe("/topics", () => {
     it("GET 200 responds with an array of topic objects", () => {

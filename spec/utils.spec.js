@@ -24,7 +24,7 @@ describe("formatDates", () => {
     expect(result).to.not.equal(array);
     expect(result).to.be.an("array");
   });
-  it("returns a new array containing converted timestamps when passed an array of one object", () => {
+  it("returns a new array containing one object with a converted timestamp when passed an array of one object", () => {
     let array = formatDates([
       {
         title: "Living in the shadow of a great man",
@@ -35,11 +35,19 @@ describe("formatDates", () => {
         votes: 100
       }
     ]);
-    let result = array[0]["created_at"];
-    const expected = new Date(1542284514171);
+    let result = array[0];
+    let expected = {
+      title: "Living in the shadow of a great man",
+      topic: "mitch",
+      author: "butter_bridge",
+      body: "I find this existence challenging",
+      created_at: 1542284514171,
+      votes: 100
+    };
+    expected.created_at = new Date(expected.created_at);
     expect(result).to.eql(expected);
   });
-  it("returns a new array containing converted timestamps when passed an array of multiple objects", () => {
+  it("returns a new array containing multiple objects with converted timestamps when passed an array of multiple objects", () => {
     let array = [
       {
         title: "Eight pug gifs that remind me of mitch",
@@ -64,6 +72,28 @@ describe("formatDates", () => {
     let expected2 = new Date(1163852514171);
     expect(result1).to.eql(expected1);
     expect(result2).to.eql(expected2);
+  });
+  it("does not mutate the original data", () => {
+    let dataToInput = [
+      {
+        title: "Eight pug gifs that remind me of mitch",
+        topic: "mitch",
+        author: "icellusedkars",
+        body: "some gifs",
+        created_at: 1289996514171
+      },
+      {
+        title: "Student SUES Mitch!",
+        topic: "mitch",
+        author: "rogersop",
+        body:
+          "We all love Mitch and his wonderful, unique typing style. However, the volume of his typing has ALLEGEDLY burst another students eardrums, and they are now suing for damages",
+        created_at: 1163852514171
+      }
+    ];
+    let originalData = { ...dataToInput[0] };
+    formatDates(dataToInput);
+    expect(dataToInput[0]).to.eql(originalData);
   });
 });
 
@@ -100,7 +130,71 @@ describe("makeRefObj", () => {
 });
 
 describe("formatComments", () => {
-  it("formats comments", () => {
+  it("returns a new array", () => {
+    let refObj = {
+      hello: 55,
+      "i have descended from the depths of hell to gift judgement unto the mortal world": 666,
+      lol: 69
+    };
+    let unformattedComments = [
+      {
+        body:
+          "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!",
+        belongs_to: "lol",
+        created_by: "butter_bridge",
+        votes: 16,
+        created_at: 1511354163389
+      },
+      {
+        body:
+          "The beautiful thing about treasure is that it exists. Got to find out what kind of sheets these are; not cotton, not rayon, silky.",
+        belongs_to:
+          "i have descended from the depths of hell to gift judgement unto the mortal world",
+        created_by: "butter_bridge",
+        votes: 14,
+        created_at: 1479818163389
+      },
+      {
+        body:
+          "Replacing the quiet elegance of the dark suit and tie with the casual indifference of these muted earth tones is a form of fashion suicide, but, uh, call me crazy — onyou it works.",
+        belongs_to: "hello",
+        created_by: "icellusedkars",
+        votes: 100,
+        created_at: 1448282163389
+      }
+    ];
+    let result = formatComments(unformattedComments, refObj);
+    expect(result).to.not.equal(unformattedComments);
+    expect(result).to.be.an("array");
+  });
+  it("formats a single comment when provided one comment in an array", () => {
+    let singleCommentArray = [
+      {
+        body:
+          "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!",
+        belongs_to: "lol",
+        created_by: "butter_bridge",
+        votes: 16,
+        created_at: 1511354163389
+      }
+    ];
+    let refObj = {
+      hello: 55,
+      "i have descended from the depths of hell to gift judgement unto the mortal world": 666,
+      lol: 69
+    };
+    let result = formatComments(singleCommentArray, refObj);
+    let expected = {
+      body:
+        "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!",
+      article_id: 69,
+      author: "butter_bridge",
+      votes: 16,
+      created_at: new Date(1511354163389)
+    };
+    expect(result[0]).to.eql(expected);
+  });
+  it("formats multiple comments when provided with multiple comments in an array", () => {
     let refObj = {
       hello: 55,
       "i have descended from the depths of hell to gift judgement unto the mortal world": 666,
@@ -165,22 +259,41 @@ describe("formatComments", () => {
     });
     expect(result).to.eql(expected);
   });
-  it("formats comments intended for seed", () => {
+  it("does not mutate the original data", () => {
     let refObj = {
-      "Living in the shadow of a great man": 1,
-      "Sony Vaio; or, The Laptop": 2,
-      "Eight pug gifs that remind me of mitch": 3,
-      "Student SUES Mitch!": 4,
-      "UNCOVERED: catspiracy to bring down democracy": 5,
-      A: 6,
-      Z: 7,
-      "Does Mitch predate civilisation?": 8,
-      "They're not exactly dogs, are they?": 9,
-      "Seven inspirational thought leaders from Manchester UK": 10,
-      "Am I a cat?": 11,
-      Moustache: 12
+      hello: 55,
+      "i have descended from the depths of hell to gift judgement unto the mortal world": 666,
+      lol: 69
     };
-    let result = formatComments(commentData, refObj);
-    console.log(result);
+    let unformattedComments = [
+      {
+        body:
+          "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!",
+        belongs_to: "lol",
+        created_by: "butter_bridge",
+        votes: 16,
+        created_at: 1511354163389
+      },
+      {
+        body:
+          "The beautiful thing about treasure is that it exists. Got to find out what kind of sheets these are; not cotton, not rayon, silky.",
+        belongs_to:
+          "i have descended from the depths of hell to gift judgement unto the mortal world",
+        created_by: "butter_bridge",
+        votes: 14,
+        created_at: 1479818163389
+      },
+      {
+        body:
+          "Replacing the quiet elegance of the dark suit and tie with the casual indifference of these muted earth tones is a form of fashion suicide, but, uh, call me crazy — onyou it works.",
+        belongs_to: "hello",
+        created_by: "icellusedkars",
+        votes: 100,
+        created_at: 1448282163389
+      }
+    ];
+    let originalData = { ...unformattedComments[0] };
+    formatComments(unformattedComments, refObj);
+    expect(unformattedComments[0]).to.eql(originalData);
   });
 });
