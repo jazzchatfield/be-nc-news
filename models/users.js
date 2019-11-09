@@ -7,7 +7,7 @@ const fetchUserByUsername = username => {
     .where({ username })
     .then(data => {
       if (data.length === 0) {
-        return Promise.reject({ status: 422, msg: "username not found" });
+        return Promise.reject({ status: 404, msg: "username not found" });
       } else return data[0];
     });
 };

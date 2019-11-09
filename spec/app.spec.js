@@ -63,10 +63,10 @@ describe("/api", () => {
             });
           });
       });
-      it("GET 422 username not found", () => {
+      it("GET 404 username not found", () => {
         return request(app)
           .get("/api/users/jasmine")
-          .expect(422)
+          .expect(404)
           .then(res => {
             expect(res.body.msg).to.eql("username not found");
           });
