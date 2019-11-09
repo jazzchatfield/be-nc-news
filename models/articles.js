@@ -11,7 +11,7 @@ const fetchArticleById = article_id => {
     .where({ article_id });
   return Promise.all([getArticle, getComments]).then(([article, comments]) => {
     if (article.length === 0) {
-      return Promise.reject({ status: 405, msg: "article does not exist" });
+      return Promise.reject({ status: 404, msg: "article does not exist" });
     } else {
       article[0].comment_count = comments.length;
       return article[0];
@@ -26,7 +26,7 @@ const updateArticleVotesById = (article_id, inc_votes) => {
     .where({ article_id })
     .then(rows => {
       if (rows.length === 0)
-        return Promise.reject({ status: 405, msg: "article does not exist" });
+        return Promise.reject({ status: 404, msg: "article does not exist" });
       let oldVotes = parseInt(rows[0].votes);
       let newVotes = oldVotes + parseInt(inc_votes);
       return connection("articles")
@@ -62,13 +62,13 @@ const createCommentByArticle = (article_id, username, body) => {
     ([article, username]) => {
       if (article.length === 0 && username.length === 0) {
         return Promise.reject({
-          status: 422,
+          status: 404,
           msg: "article and username do not exist"
         });
       } else if (article.length === 0) {
-        return Promise.reject({ status: 422, msg: "article does not exist" });
+        return Promise.reject({ status: 404, msg: "article does not exist" });
       } else if (username.length === 0) {
-        return Promise.reject({ status: 422, msg: "username does not exist" });
+        return Promise.reject({ status: 404, msg: "username does not exist" });
       } else
         return connection("comments")
           .insert(commentObj)
@@ -88,7 +88,7 @@ const fetchCommentsByArticle = (article_id, sort_by, order) => {
     .orderBy(sort_by, order)
     .then(rows => {
       if (rows.length === 0) {
-        return Promise.reject({ status: 422, msg: "no comments found" });
+        return Promise.reject({ status: 404, msg: "no comments found" });
       }
       return rows.map(row => {
         delete row.article_id;
@@ -129,7 +129,7 @@ const fetchArticles = (sort_by, order, author, topic) => {
     .then(rows => {
       if (rows.length === 0) {
         return Promise.reject({
-          status: 400,
+          status: 404,
           msg: "author or topic does not exist"
         });
       } else return rows;

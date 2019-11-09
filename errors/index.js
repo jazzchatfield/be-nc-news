@@ -15,7 +15,7 @@ const handlePsqlErrors = (err, req, res, next) => {
       status: 400,
       msg: "body does not contain all required information"
     },
-    "22003": { status: 422, msg: "value is too large" }
+    "22003": { status: 400, msg: "value is too large" }
   };
   if (errors[err.code]) {
     res.status(errors[err.code].status).send({ msg: errors[err.code].msg });

@@ -140,10 +140,10 @@ describe("/api", () => {
         .expect(400)
         .then(res => expect(res.body.msg).to.equal("order_by invalid"));
     });
-    it("GET 405 author or topic does not exist", () => {
+    it("GET 404 author or topic does not exist", () => {
       return request(app)
         .get("/api/articles?author=aoifhgqpj")
-        .expect(400)
+        .expect(404)
         .then(res => {
           expect(res.body.msg).to.equal("author or topic does not exist");
           return request(app).get("/api/articles?topic=sofihjwsif");
@@ -190,10 +190,10 @@ describe("/api", () => {
             expect(res.body.msg).to.equal("invalid format");
           });
       });
-      it("GET 405 no such article", () => {
+      it("GET 404 no such article", () => {
         return request(app)
           .get("/api/articles/9284098")
-          .expect(405)
+          .expect(404)
           .then(res => {
             expect(res.body.msg).to.equal("article does not exist");
           });
@@ -229,12 +229,12 @@ describe("/api", () => {
             expect(res.body.msg).to.equal("invalid format");
           });
       });
-      it("PATCH 422 no such article", () => {
+      it("PATCH 404 no such article", () => {
         return request(app)
           .patch("/api/articles/3498")
           .set("Content-Type", "application/json")
           .send('{"inc_votes":"1"}')
-          .expect(405)
+          .expect(404)
           .then(res => {
             expect(res.body.msg).to.equal("article does not exist");
           });
@@ -291,12 +291,12 @@ describe("/api", () => {
               );
             });
         });
-        it("POST 400 article id does not exist", () => {
+        it("POST 404 article id does not exist", () => {
           return request(app)
             .post("/api/articles/138534342/comments")
             .set("Content-Type", "application/json")
             .send('{"username":"lurker","body":"This is very good"}')
-            .expect(422)
+            .expect(404)
             .then(res => {
               expect(res.body.msg).to.equal("article does not exist");
             });
@@ -311,12 +311,12 @@ describe("/api", () => {
               expect(res.body.msg).to.equal("invalid format");
             });
         });
-        it("POST 400 username does not exist", () => {
+        it("POST 404 username does not exist", () => {
           return request(app)
             .post("/api/articles/1/comments")
             .set("Content-Type", "application/json")
             .send('{"username":"ofhwiohgs","body":"This is very good"}')
-            .expect(422)
+            .expect(404)
             .then(res => {
               expect(res.body.msg).to.equal("username does not exist");
             });
@@ -356,18 +356,18 @@ describe("/api", () => {
               });
             });
         });
-        it("GET 422 value is too large", () => {
+        it("GET 400 value is too large", () => {
           return request(app)
             .get("/api/articles/3829048290/comments")
-            .expect(422)
+            .expect(400)
             .then(res => {
               expect(res.body.msg).to.equal("value is too large");
             });
         });
-        it("GET 422 no comments found", () => {
+        it("GET 404 no comments found", () => {
           return request(app)
             .get("/api/articles/3829/comments")
-            .expect(422)
+            .expect(404)
             .then(res => {
               expect(res.body.msg).to.equal("no comments found");
             });
