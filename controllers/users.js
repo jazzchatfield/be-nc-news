@@ -5,8 +5,7 @@ const getUserByUsername = (req, res, next) => {
 
   fetchUserByUsername(username)
     .then(user => {
-      if (user.err) next(user.err);
-      else res.status(200).send({ user });
+      res.status(200).send({ user });
     })
     .catch(next);
 };

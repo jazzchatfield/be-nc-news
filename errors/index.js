@@ -8,20 +8,27 @@ const handleCustomErrors = (err, req, res, next) => {
 };
 
 const handlePsqlErrors = (err, req, res, next) => {
-  if (err.code === "42703") {
-    res.status(400).send({ msg: "sort_by column does not exist" });
-  }
-  if (err.code === "22P02") {
-    res.status(400).send({ msg: "invalid format" });
-  }
-  if (err.code === "23502") {
-    res
-      .status(400)
-      .send({ msg: "body does not contain all required information" });
-  }
-  if (err.code === "22003") {
-    res.status(422).send({ msg: "value is too large" });
+  const errors = {
+    42703: { status: 400, msg: "sort_by column does not exist" },
+    "22P02": { status: 400, msg: "invalid format" },
+    "23502": {
+      status: 400,
+      msg: "body does not contain all required information"
+    },
+    "22003": { status: 422, msg: "value is too large" }
+  };
+  if (errors[err.code]) {
+    res.status(errors[err.code].status).send({ msg: errors[err.code].msg });
   }
 };
 
-module.exports = { send405Error, handleCustomErrors, handlePsqlErrors };
+const handleServerErrors = (err, req, res, next) => {
+  res.status(500).send({ msg: "internal server error" });
+};
+
+module.exports = {
+  send405Error,
+  handleCustomErrors,
+  handlePsqlErrors,
+  handleServerErrors
+};
