@@ -7,7 +7,7 @@ const updateCommentVotes = (comment_id, inc_votes) => {
     .where({ comment_id })
     .then(rows => {
       if (rows.length === 0)
-        return Promise.reject({ status: 422, msg: "comment does not exist" });
+        return Promise.reject({ status: 404, msg: "comment does not exist" });
       let oldVotes = parseInt(rows[0].votes);
       let newVotes = oldVotes + inc_votes;
       return connection("comments")

@@ -455,12 +455,12 @@ describe("/api", () => {
             expect(res.body.msg).to.equal("invalid format");
           });
       });
-      it("PATCH 422 comment_id does not exist", () => {
+      it("PATCH 404 comment_id does not exist", () => {
         return request(app)
           .patch("/api/comments/3987")
           .set("Content-Type", "application/json")
           .send('{"inc_votes":"10"}')
-          .expect(422)
+          .expect(404)
           .then(res => {
             expect(res.body.msg).to.equal("comment does not exist");
           });
