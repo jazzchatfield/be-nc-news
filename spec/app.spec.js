@@ -205,10 +205,10 @@ describe("/api", () => {
           .send('{"inc_votes":"1"}')
           .expect(200)
           .then(res => {
-            let result = res.body.updated.votes;
+            let result = res.body.article.votes;
             let expected = 101;
             expect(result).to.equal(expected);
-            expect(res.body.updated).to.have.keys(
+            expect(res.body.article).to.have.keys(
               "article_id",
               "title",
               "body",
@@ -269,7 +269,7 @@ describe("/api", () => {
             .send('{"username":"lurker","body":"This is very good"}')
             .expect(200)
             .then(res => {
-              expect(res.body.created).to.have.keys(
+              expect(res.body.comment).to.have.keys(
                 "comment_id",
                 "author",
                 "article_id",

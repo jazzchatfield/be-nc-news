@@ -19,8 +19,8 @@ const patchArticleVotesById = (req, res, next) => {
   let { inc_votes } = req.body;
   let { article_id } = req.params;
   updateArticleVotesById(article_id, inc_votes)
-    .then(updated => {
-      res.status(200).send({ updated });
+    .then(article => {
+      res.status(200).send({ article });
     })
     .catch(next);
 };
@@ -29,8 +29,8 @@ const postCommentByArticle = (req, res, next) => {
   let { article_id } = req.params;
   let { body, username } = req.body;
   createCommentByArticle(article_id, username, body)
-    .then(created => {
-      res.status(200).send({ created });
+    .then(comment => {
+      res.status(200).send({ comment });
     })
     .catch(next);
 };
