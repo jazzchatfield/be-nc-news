@@ -105,9 +105,9 @@ describe("/api", () => {
           });
         });
     });
-    it("GET 200 responds with articles when provided queries", () => {
+    it("GET 200 responds with articles when provided sort_by queries", () => {
       return request(app)
-        .get("/api/articles?sort_by=votes&order=asc&author=butter_bridge")
+        .get("/api/articles?sort_by=votes&order=asc")
         .expect(200)
         .then(res => {
           expect(res.body.articles[0]).to.have.keys(
@@ -126,6 +126,73 @@ describe("/api", () => {
           expect(parsedArticles).to.be.sortedBy("votes");
         });
     });
+    it("GET 200 responds with articles when provided an author query", () => {
+      return request(app)
+        .get("/api/articles?author=butter_bridge")
+        .expect(200)
+        .then(res => {
+          expect(res.body.articles[0]).to.have.keys(
+            "author",
+            "title",
+            "article_id",
+            "topic",
+            "created_at",
+            "votes",
+            "comment_count"
+          );
+          expect(res.body.articles[0].author).to.equal("butter_bridge");
+        });
+    });
+    it("GET 200 responds with articles when provided a topic query", () => {
+      return request(app)
+        .get("/api/articles?topic=mitch")
+        .expect(200)
+        .then(res => {
+          expect(res.body.articles[0]).to.have.keys(
+            "author",
+            "title",
+            "article_id",
+            "topic",
+            "created_at",
+            "votes",
+            "comment_count"
+          );
+          expect(res.body.articles[0].topic).to.equal("mitch");
+        });
+    });
+    it("GET 200 responds with articles when provided multiple queries", () => {
+      return request(app)
+        .get(
+          "/api/articles?sort_by=votes&order=asc&author=butter_bridge&topic=mitch"
+        )
+        .expect(200)
+        .then(res => {
+          expect(res.body.articles[0]).to.have.keys(
+            "author",
+            "title",
+            "article_id",
+            "topic",
+            "created_at",
+            "votes",
+            "comment_count"
+          );
+          let parsedArticles = res.body.articles.map(article => {
+            article.votes = parseInt(article.votes);
+            return article;
+          });
+          expect(parsedArticles).to.be.sortedBy("votes");
+          expect(res.body.articles[0].topic).to.equal("mitch");
+          expect(res.body.articles[0].author).to.equal("butter_bridge");
+        });
+    });
+    it("GET 200 responds with empty array when provided with a valid author that has no articles", () => {
+      return request(app)
+        .get("/api/articles?author=lurker")
+        .expect(200)
+        .then(res => {
+          expect(res.body.articles.length).to.equal(0);
+        });
+    });
     it("GET 400 sort_by invalid", () => {
       return request(app)
         .get("/api/articles?sort_by=sofjwfn")
@@ -140,16 +207,28 @@ describe("/api", () => {
         .expect(400)
         .then(res => expect(res.body.msg).to.equal("order_by invalid"));
     });
-    it("GET 404 author or topic does not exist", () => {
+    it("GET 404 author does not exist", () => {
       return request(app)
         .get("/api/articles?author=aoifhgqpj")
         .expect(404)
         .then(res => {
-          expect(res.body.msg).to.equal("author or topic does not exist");
-          return request(app).get("/api/articles?topic=sofihjwsif");
-        })
+          expect(res.body.msg).to.equal("author does not exist");
+        });
+    });
+    it("GET 404 topic does not exist", () => {
+      return request(app)
+        .get("/api/articles?topic=aoifhgqpj")
+        .expect(404)
         .then(res => {
-          expect(res.body.msg).to.equal("author or topic does not exist");
+          expect(res.body.msg).to.equal("topic does not exist");
+        });
+    });
+    it("GET 404 author and topic do not exist", () => {
+      return request(app)
+        .get("/api/articles?author=aoifhgqpj&topic=igssdjs")
+        .expect(404)
+        .then(res => {
+          expect(res.body.msg).to.equal("author and topic do not exist");
         });
     });
     it("PATCH/POST/DELETE 405 method not allowed", () => {

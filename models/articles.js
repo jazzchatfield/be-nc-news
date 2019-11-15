@@ -35,8 +35,7 @@ const updateArticleVotesById = (article_id, inc_votes) => {
         .returning("*");
     })
     .then(rows => {
-      if (rows.length === 1) return rows[0];
-      else return rows;
+      return rows[0];
     });
 };
 
@@ -97,43 +96,133 @@ const fetchCommentsByArticle = (article_id, sort_by, order) => {
     });
 };
 
+// const fetchArticles = (sort_by, order, author, topic) => {
+//   return connection
+//     .select("author", "title", "article_id", "topic", "created_at", "votes")
+//     .from("articles")
+//     .modify(function(queryBuilder) {
+//       if (author !== undefined) {
+//         queryBuilder.where({ author });
+//       }
+//       if (topic !== undefined) {
+//         queryBuilder.where({ topic });
+//       }
+//     })
+//     .orderBy(sort_by, order)
+//     .then(rows => {
+//       let promiseArray = rows.map(row => {
+//         return connection
+//           .select("*")
+//           .from("comments")
+//           .where({ article_id: row.article_id });
+//       });
+//       return Promise.all([rows, ...promiseArray]);
+//     })
+//     .then(([rows, ...promiseArray]) => {
+//       let array = [rows, ...promiseArray];
+//       for (let i = 1; i < array.length; i++) {
+//         rows[i - 1].comment_count = array[i].length;
+//       }
+//       return rows;
+//     })
+//     .then(rows => {
+//       if (rows.length === 0) {
+//         return Promise.reject({
+//           status: 404,
+//           msg: "author or topic does not exist"
+//         });
+//       } else return rows;
+//     });
+// };
+
 const fetchArticles = (sort_by, order, author, topic) => {
-  return connection
-    .select("author", "title", "article_id", "topic", "created_at", "votes")
-    .from("articles")
+  let findAuthor = connection
+    .select("*")
+    .from("users")
+    .where({ username: author })
+    .then(rows => {
+      return rows;
+    });
+
+  let findTopic = connection
+    .select("*")
+    .from("topics")
+    .where({ slug: topic })
+    .then(rows => {
+      return rows;
+    });
+
+  let articleFinder = connection
+    .select(
+      "articles.author",
+      "articles.title",
+      "articles.article_id",
+      "articles.topic",
+      "articles.created_at",
+      "articles.votes"
+    )
+    .from("articles", "comments")
+    .count({ comment_count: "comments.article_id" })
+    .leftJoin("comments", "articles.article_id", "comments.article_id")
+    .groupBy("articles.article_id")
     .modify(function(queryBuilder) {
-      if (author !== undefined) {
-        queryBuilder.where({ author });
+      if (author !== "none") {
+        queryBuilder.where({ "articles.author": author });
       }
-      if (topic !== undefined) {
-        queryBuilder.where({ topic });
+      if (topic !== "none") {
+        queryBuilder.where({ "articles.topic": topic });
       }
     })
     .orderBy(sort_by, order)
     .then(rows => {
-      let promiseArray = rows.map(row => {
-        return connection
-          .select("*")
-          .from("comments")
-          .where({ article_id: row.article_id });
-      });
-      return Promise.all([rows, ...promiseArray]);
-    })
-    .then(([rows, ...promiseArray]) => {
-      let array = [rows, ...promiseArray];
-      for (let i = 1; i < array.length; i++) {
-        rows[i - 1].comment_count = array[i].length;
-      }
       return rows;
-    })
-    .then(rows => {
+    });
+
+  if (author === "none" && topic === "none") {
+    return articleFinder;
+  }
+
+  if (author !== "none" && topic === "none") {
+    return findAuthor.then(rows => {
       if (rows.length === 0) {
+        return Promise.reject({ status: 404, msg: "author does not exist" });
+      } else return articleFinder;
+    });
+  }
+
+  if (author === "none" && topic !== "none") {
+    return findTopic.then(rows => {
+      if (rows.length === 0) {
+        return Promise.reject({ status: 404, msg: "topic does not exist" });
+      } else return articleFinder;
+    });
+  }
+
+  if (author !== "none" && topic !== "none") {
+    return Promise.all([findTopic, findAuthor]).then(([topic, author]) => {
+      if (topic.length === 0 && author.length === 0) {
         return Promise.reject({
           status: 404,
-          msg: "author or topic does not exist"
+          msg: "author and topic do not exist"
         });
-      } else return rows;
+      }
+      if (topic.length === 0 && author.length !== 0) {
+        return Promise.reject({
+          status: 404,
+          msg: "topic does not exist"
+        });
+      }
+      if (author.length === 0 && topic.length !== 0) {
+        return Promise.reject({
+          status: 404,
+          msg: "author does not exist"
+        });
+      }
+      if (author.length !== 0 && topic.length !== 0) {
+        return articleFinder;
+      }
     });
+  }
 };
 
 module.exports = {

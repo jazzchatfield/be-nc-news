@@ -64,6 +64,12 @@ const getArticles = (req, res, next) => {
   if (order === undefined) {
     order = "desc";
   }
+  if (author === undefined) {
+    author = "none";
+  }
+  if (topic === undefined) {
+    topic = "none";
+  }
   if (order !== "asc" && order !== "desc") {
     next({ status: 400, msg: "order_by invalid" });
   }

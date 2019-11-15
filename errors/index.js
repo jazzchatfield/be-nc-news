@@ -9,7 +9,7 @@ const handleCustomErrors = (err, req, res, next) => {
 
 const handlePsqlErrors = (err, req, res, next) => {
   const errors = {
-    42703: { status: 400, msg: "sort_by column does not exist" },
+    "42703": { status: 400, msg: "sort_by column does not exist" },
     "22P02": { status: 400, msg: "invalid format" },
     "23502": {
       status: 400,
