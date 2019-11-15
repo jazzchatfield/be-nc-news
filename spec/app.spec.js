@@ -318,14 +318,22 @@ describe("/api", () => {
             expect(res.body.msg).to.equal("article does not exist");
           });
       });
-      it("PATCH 400 body invalid format", () => {
+      it("PATCH 200 when not required info in body", () => {
         return request(app)
           .patch("/api/articles/1")
           .set("Content-Type", "application/json")
           .send('{"inc_vsdfbnotes":"5"}')
-          .expect(400)
+          .expect(200)
           .then(res => {
-            expect(res.body.msg).to.equal("invalid format");
+            expect(res.body.article).to.have.keys(
+              "article_id",
+              "title",
+              "body",
+              "votes",
+              "topic",
+              "author",
+              "created_at"
+            );
           });
       });
       it("POST/DELETE 405 method not allowed", () => {
@@ -341,12 +349,12 @@ describe("/api", () => {
         return Promise.all(promiseArray);
       });
       describe("/comments", () => {
-        it("POST 200 posts new comment and returns posted comment", () => {
+        it("POST 201 posts new comment and returns posted comment", () => {
           return request(app)
             .post("/api/articles/1/comments")
             .set("Content-Type", "application/json")
             .send('{"username":"lurker","body":"This is very good"}')
-            .expect(200)
+            .expect(201)
             .then(res => {
               expect(res.body.comment).to.have.keys(
                 "comment_id",
@@ -414,6 +422,14 @@ describe("/api", () => {
               );
             });
         });
+        it("GET 200 empty array when article exists but has no comments", () => {
+          return request(app)
+            .get("/api/articles/3/comments")
+            .expect(200)
+            .then(res => {
+              expect(res.body.comments.length).to.equal(0);
+            });
+        });
         it("GET 400 article_id invalid format", () => {
           return request(app)
             .get("/api/articles/ofieelkjf/comments")
@@ -443,12 +459,12 @@ describe("/api", () => {
               expect(res.body.msg).to.equal("value is too large");
             });
         });
-        it("GET 404 no comments found", () => {
+        it("GET 404 article doesn't exist", () => {
           return request(app)
             .get("/api/articles/3829/comments")
             .expect(404)
             .then(res => {
-              expect(res.body.msg).to.equal("no comments found");
+              expect(res.body.msg).to.equal("article does not exist");
             });
         });
         it("GET 200 takes sort_by and order queries", () => {

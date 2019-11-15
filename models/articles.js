@@ -79,23 +79,53 @@ const createCommentByArticle = (article_id, username, body) => {
   );
 };
 
+// OLD FETCHCOMMENTSBYARTICLE
+// const fetchCommentsByArticle = (article_id, sort_by, order) => {
+//   return connection
+//     .select("*")
+//     .from("comments")
+//     .where({ article_id })
+//     .orderBy(sort_by, order)
+//     .then(rows => {
+//       if (rows.length === 0) {
+//         return Promise.reject({ status: 404, msg: "no comments found" });
+//       }
+//       return rows.map(row => {
+//         delete row.article_id;
+//         return row;
+//       });
+//     });
+// };
+
+// NEW FETCHCOMMENTSBYARTICLE
 const fetchCommentsByArticle = (article_id, sort_by, order) => {
   return connection
     .select("*")
-    .from("comments")
+    .from("articles")
     .where({ article_id })
-    .orderBy(sort_by, order)
     .then(rows => {
       if (rows.length === 0) {
-        return Promise.reject({ status: 404, msg: "no comments found" });
-      }
-      return rows.map(row => {
-        delete row.article_id;
-        return row;
-      });
+        return Promise.reject({ status: 404, msg: "article does not exist" });
+      } else
+        return connection
+          .select("*")
+          .from("comments")
+          .where({ article_id })
+          .orderBy(sort_by, order);
+    })
+    .then(rows => {
+      if (rows.length === 0) {
+        return rows;
+      } else
+        return rows.map(row => {
+          let newObj = { ...row };
+          delete newObj.article_id;
+          return newObj;
+        });
     });
 };
 
+// OLD FETCHARTICLES WITH BASIC QUERIES
 // const fetchArticles = (sort_by, order, author, topic) => {
 //   return connection
 //     .select("author", "title", "article_id", "topic", "created_at", "votes")
@@ -135,6 +165,7 @@ const fetchCommentsByArticle = (article_id, sort_by, order) => {
 //     });
 // };
 
+// NEW FETCHARTICLES WITH JOIN QUERY
 const fetchArticles = (sort_by, order, author, topic) => {
   let findAuthor = connection
     .select("*")
