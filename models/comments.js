@@ -21,9 +21,18 @@ const updateCommentVotes = (comment_id, inc_votes) => {
 };
 
 const removeComment = comment_id => {
-  return connection("comments")
+  return connection
+    .select("*")
+    .from("comments")
     .where({ comment_id })
-    .del();
+    .then(rows => {
+      if (rows.length === 0) {
+        return Promise.reject({ status: 404, msg: "comment does not exist" });
+      }
+      return connection("comments")
+        .where({ comment_id })
+        .del();
+    });
 };
 
 module.exports = { updateCommentVotes, removeComment };

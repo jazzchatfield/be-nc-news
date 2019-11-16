@@ -13,6 +13,20 @@ chai.use(chaiSorted);
 describe("/api", () => {
   beforeEach(() => connection.seed.run());
   after(() => connection.destroy());
+  describe("/api", () => {
+    it("GET/PATCH/POST/DELETE 405 method not allowed", () => {
+      const invalidMethods = ["get", "patch", "post", "delete"];
+      const promiseArray = invalidMethods.map(method => {
+        return request(app)
+          [method]("/api")
+          .expect(405)
+          .then(({ body }) => {
+            expect(body.msg).to.equal("Method not allowed");
+          });
+      });
+      return Promise.all(promiseArray);
+    });
+  });
   describe("/topics", () => {
     it("GET 200 responds with an array of topic objects", () => {
       return request(app)
@@ -527,10 +541,10 @@ describe("/api", () => {
           .send('{"inc_votes":"10"}')
           .expect(200)
           .then(res => {
-            let result = res.body.updated.votes;
+            let result = res.body.comment.votes;
             let expected = 26;
             expect(result).to.equal(expected);
-            expect(res.body.updated).to.have.keys(
+            expect(res.body.comment).to.have.keys(
               "comment_id",
               "author",
               "article_id",
@@ -560,6 +574,23 @@ describe("/api", () => {
             expect(res.body.msg).to.equal("comment does not exist");
           });
       });
+      it("PATCH 200 when incorrect body is provided, returns the comment with no change", () => {
+        return request(app)
+          .patch("/api/comments/1")
+          .set("Content-Type", "application/json")
+          .send('{"skghslgh":"10"}')
+          .expect(200)
+          .then(res => {
+            expect(res.body.comment).to.have.keys(
+              "comment_id",
+              "author",
+              "article_id",
+              "votes",
+              "created_at",
+              "body"
+            );
+          });
+      });
       it("DELETE 204 deletes given comment", () => {
         return request(app)
           .delete("/api/comments/1")
@@ -571,6 +602,14 @@ describe("/api", () => {
           .expect(400)
           .then(res => {
             expect(res.body.msg).to.equal("invalid format");
+          });
+      });
+      it("DELETE 404 comment_id valid but doesn't exist", () => {
+        return request(app)
+          .delete("/api/comments/666")
+          .expect(404)
+          .then(res => {
+            expect(res.body.msg).to.equal("comment does not exist");
           });
       });
       it("GET/POST 405 method not allowed", () => {
