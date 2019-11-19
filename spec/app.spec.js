@@ -14,8 +14,23 @@ describe("/api", () => {
   beforeEach(() => connection.seed.run());
   after(() => connection.destroy());
   describe("/api", () => {
-    it("GET/PATCH/POST/DELETE 405 method not allowed", () => {
-      const invalidMethods = ["get", "patch", "post", "delete"];
+    it("GET 200 responds with array of endpoint objects", () => {
+      return request(app)
+        .get("/api")
+        .expect(200)
+        .then(res => {
+          expect(res.body.endpoints[0]).to.contain.keys(
+            "name",
+            "URL",
+            "method",
+            "responseKey",
+            "accepts",
+            "returns"
+          );
+        });
+    });
+    it("PATCH/POST/DELETE 405 method not allowed", () => {
+      const invalidMethods = ["patch", "post", "delete"];
       const promiseArray = invalidMethods.map(method => {
         return request(app)
           [method]("/api")
