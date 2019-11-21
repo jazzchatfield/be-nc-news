@@ -96,12 +96,9 @@ const getArticles = (req, res, next) => {
 };
 
 const postArticle = (req, res, next) => {
-  let { title, body, topic, author } = req.body;
-  createArticle(title, body, topic, author)
+  let { title, body, topic, username } = req.body;
+  createArticle(title, body, topic, username)
     .then(article => {
-      // console.log(author);
-      // console.log(topic);
-      // console.log(article);
       res.status(201).send({ article });
     })
     .catch(next);

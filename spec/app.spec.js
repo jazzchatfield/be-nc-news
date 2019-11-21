@@ -320,7 +320,7 @@ describe("/api", () => {
         .post("/api/articles")
         .set("Content-Type", "application/json")
         .send({
-          username: "wfjhfwnjfwj",
+          username: "salkfjwdij",
           body:
             "This is my article, I like to write a new article, blah blah blah",
           topic: "mitch",
@@ -329,6 +329,38 @@ describe("/api", () => {
         .expect(404)
         .then(res => {
           expect(res.body.msg).to.equal("author not found");
+        });
+    });
+    it("POST 404 topic not found", () => {
+      return request(app)
+        .post("/api/articles")
+        .set("Content-Type", "application/json")
+        .send({
+          username: "lurker",
+          body:
+            "This is my article, I like to write a new article, blah blah blah",
+          topic: "satan",
+          title: "A new article"
+        })
+        .expect(404)
+        .then(res => {
+          expect(res.body.msg).to.equal("topic not found");
+        });
+    });
+    it("POST 404 topic and author not found", () => {
+      return request(app)
+        .post("/api/articles")
+        .set("Content-Type", "application/json")
+        .send({
+          username: "thedevil",
+          body:
+            "This is my article, I like to write a new article, blah blah blah",
+          topic: "satan",
+          title: "A new article"
+        })
+        .expect(404)
+        .then(res => {
+          expect(res.body.msg).to.equal("author and topic not found");
         });
     });
     it("PATCH/DELETE 405 method not allowed", () => {
