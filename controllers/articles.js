@@ -3,7 +3,8 @@ const {
   updateArticleVotesById,
   createCommentByArticle,
   fetchCommentsByArticle,
-  fetchArticles
+  fetchArticles,
+  createArticle
 } = require("../models/articles");
 
 const getArticleById = (req, res, next) => {
@@ -94,10 +95,23 @@ const getArticles = (req, res, next) => {
     .catch(next);
 };
 
+const postArticle = (req, res, next) => {
+  let { title, body, topic, author } = req.body;
+  createArticle(title, body, topic, author)
+    .then(article => {
+      // console.log(author);
+      // console.log(topic);
+      // console.log(article);
+      res.status(201).send({ article });
+    })
+    .catch(next);
+};
+
 module.exports = {
   getArticleById,
   patchArticleVotesById,
   postCommentByArticle,
   getCommentsByArticle,
-  getArticles
+  getArticles,
+  postArticle
 };

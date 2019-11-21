@@ -114,7 +114,7 @@ describe("/api", () => {
       });
     });
   });
-  describe.only("/articles", () => {
+  describe("/articles", () => {
     it("GET 200 responds with articles when not provided queries", () => {
       return request(app)
         .get("/api/articles")
@@ -291,8 +291,48 @@ describe("/api", () => {
         expect(page1.body.articles).to.not.eql(page2.body.articles);
       });
     });
-    it("PATCH/POST/DELETE 405 method not allowed", () => {
-      const invalidMethods = ["patch", "post", "delete"];
+    it("POST 201 returns created article", () => {
+      return request(app)
+        .post("/api/articles")
+        .set("Content-Type", "application/json")
+        .send({
+          username: "lurker",
+          body:
+            "This is my article, I like to write a new article, blah blah blah",
+          topic: "mitch",
+          title: "A new article"
+        })
+        .expect(201)
+        .then(res => {
+          expect(res.body.article).to.have.keys(
+            "article_id",
+            "title",
+            "body",
+            "votes",
+            "topic",
+            "author",
+            "created_at"
+          );
+        });
+    });
+    it("POST 404 user not found", () => {
+      return request(app)
+        .post("/api/articles")
+        .set("Content-Type", "application/json")
+        .send({
+          username: "wfjhfwnjfwj",
+          body:
+            "This is my article, I like to write a new article, blah blah blah",
+          topic: "mitch",
+          title: "A new article"
+        })
+        .expect(404)
+        .then(res => {
+          expect(res.body.msg).to.equal("author not found");
+        });
+    });
+    it("PATCH/DELETE 405 method not allowed", () => {
+      const invalidMethods = ["patch", "delete"];
       const promiseArray = invalidMethods.map(method => {
         return request(app)
           [method]("/api/articles")

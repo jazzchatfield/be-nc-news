@@ -285,10 +285,53 @@ const fetchArticles = (sort_by, order, author, topic, limit, p) => {
   }
 };
 
+const createArticle = (title, body, topic, author) => {
+  // findAuthor and findTopic are the queries that aren't working - the return statement below is just to test the findAuthor query, the commented out return Promise.all below will work when I get the other queries to work ARGHHHH
+
+  const articleObj = { title, body, topic, author };
+
+  const creationPromise = connection
+    .insert(articleObj)
+    .into("articles")
+    .returning("*");
+
+  const findAuthor = connection
+    .select("*")
+    .from("users")
+    .where("username", author);
+
+  const findTopic = connection
+    .select("*")
+    .from("topics")
+    .where({ slug: topic });
+
+  return findAuthor.then(rows => {
+    return rows;
+  });
+
+  // return Promise.all([findAuthor, findTopic])
+  //   .then(([author, topic]) => {
+  //     if (author.length === 0 && topic.length === 0) {
+  //       return Promise.reject({
+  //         status: 404,
+  //         msg: "author and topic not found"
+  //       });
+  //     } else if (author.length === 0) {
+  //       return Promise.reject({ status: 404, msg: "author not found" });
+  //     } else if (topic.length === 0) {
+  //       return Promise.reject({ status: 404, msg: "topic not found" });
+  //     } else return creationPromise;
+  //   })
+  //   .then(rows => {
+  //     return rows[0];
+  //   });
+};
+
 module.exports = {
   fetchArticleById,
   updateArticleVotesById,
   createCommentByArticle,
   fetchCommentsByArticle,
-  fetchArticles
+  fetchArticles,
+  createArticle
 };
