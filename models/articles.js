@@ -323,11 +323,34 @@ const createArticle = (title, body, topic, author) => {
     });
 };
 
+const removeArticle = article_id => {
+  return connection
+    .select("*")
+    .from("articles")
+    .where({ article_id })
+    .then(rows => {
+      if (rows.length === 0) {
+        return Promise.reject({ status: 404, msg: "article does not exist" });
+      }
+      return connection
+        .from("comments")
+        .where({ article_id })
+        .del();
+    })
+    .then(() => {
+      return connection
+        .from("articles")
+        .where({ article_id })
+        .del();
+    });
+};
+
 module.exports = {
   fetchArticleById,
   updateArticleVotesById,
   createCommentByArticle,
   fetchCommentsByArticle,
   fetchArticles,
-  createArticle
+  createArticle,
+  removeArticle
 };

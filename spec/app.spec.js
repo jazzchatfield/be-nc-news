@@ -42,7 +42,7 @@ describe("/api", () => {
       return Promise.all(promiseArray);
     });
   });
-  describe("/topics", () => {
+  describe.only("/topics", () => {
     it("GET 200 responds with an array of topic objects", () => {
       return request(app)
         .get("/api/topics")
@@ -52,8 +52,30 @@ describe("/api", () => {
           expect(res.body.topics[0]).to.contain.keys("slug", "description");
         });
     });
-    it("PATCH/POST/DELETE 405 method not allowed", () => {
-      const invalidMethods = ["patch", "post", "delete"];
+    it("POST 201 posts a topic", () => {
+      return request(app)
+        .post("/api/topics")
+        .set("Content-Type", "application/json")
+        .send({ slug: "books", description: "It is nice to read books!" })
+        .expect(201)
+        .then(res => {
+          expect(res.body.topic).to.have.keys("slug", "description");
+        });
+    });
+    it("POST 400 missing information", () => {
+      return request(app)
+        .post("/api/topics")
+        .set("Content-Type", "application/json")
+        .send({ description: "It is nice to read books!" })
+        .expect(400)
+        .then(res => {
+          expect(res.body.msg).to.equal(
+            "body does not contain all required information"
+          );
+        });
+    });
+    it("PATCH/DELETE 405 method not allowed", () => {
+      const invalidMethods = ["patch", "delete"];
       const promiseArray = invalidMethods.map(method => {
         return request(app)
           [method]("/api/topics")
@@ -468,8 +490,29 @@ describe("/api", () => {
             );
           });
       });
-      it("POST/DELETE 405 method not allowed", () => {
-        const invalidMethods = ["post", "delete"];
+      it("DELETE 204 deletes article", () => {
+        return request(app)
+          .del("/api/articles/1")
+          .expect(204);
+      });
+      it("DELETE 404 article does not exist", () => {
+        return request(app)
+          .del("/api/articles/200")
+          .expect(404)
+          .then(res => {
+            expect(res.body.msg).to.equal("article does not exist");
+          });
+      });
+      it("DELETE 400 invalid format", () => {
+        return request(app)
+          .del("/api/articles/aoifjksfn")
+          .expect(400)
+          .then(res => {
+            expect(res.body.msg).to.equal("invalid format");
+          });
+      });
+      it("POST 405 method not allowed", () => {
+        const invalidMethods = ["post"];
         const promiseArray = invalidMethods.map(method => {
           return request(app)
             [method]("/api/articles/1")
