@@ -42,7 +42,7 @@ describe("/api", () => {
       return Promise.all(promiseArray);
     });
   });
-  describe.only("/topics", () => {
+  describe("/topics", () => {
     it("GET 200 responds with an array of topic objects", () => {
       return request(app)
         .get("/api/topics")
@@ -87,9 +87,66 @@ describe("/api", () => {
       return Promise.all(promiseArray);
     });
   });
-  describe("/users", () => {
-    it("GET/PATCH/POST/DELETE 405 method not allowed", () => {
-      const invalidMethods = ["get", "patch", "post", "delete"];
+  describe.only("/users", () => {
+    it("GET 200 fetches all users", () => {
+      return request(app)
+        .get("/api/users")
+        .expect(200)
+        .then(res => {
+          expect(res.body.users[0]).to.have.keys(
+            "username",
+            "name",
+            "avatar_url"
+          );
+        });
+    });
+    it("POST 201", () => {
+      return request(app)
+        .post("/api/users")
+        .set("Content-Type", "application/json")
+        .send({
+          username: "jasmine",
+          name: "Jazz Chatfield",
+          avatar_url:
+            "https://www.golenbock.com/wp-content/uploads/2015/01/placeholder-user.png"
+        })
+        .expect(201)
+        .then(res => {
+          expect(res.body.user).to.have.keys("username", "name", "avatar_url");
+        });
+    });
+    it("POST 201 has default avatar_url if not specified", () => {
+      return request(app)
+        .post("/api/users")
+        .set("Content-Type", "application/json")
+        .send({
+          username: "kim",
+          name: "Kim Foale"
+        })
+        .expect(201)
+        .then(res => {
+          expect(res.body.user).to.have.keys("username", "name", "avatar_url");
+          expect(res.body.user.avatar_url).to.equal(
+            "https://www.golenbock.com/wp-content/uploads/2015/01/placeholder-user.png"
+          );
+        });
+    });
+    it("POST 400 body does not contain information", () => {
+      return request(app)
+        .post("/api/users")
+        .set("Content-Type", "application/json")
+        .send({
+          username: "newboy"
+        })
+        .expect(400)
+        .then(res => {
+          expect(res.body.msg).to.equal(
+            "body does not contain all required information"
+          );
+        });
+    });
+    it("PATCH/DELETE 405 method not allowed", () => {
+      const invalidMethods = ["patch", "delete"];
       const promiseArray = invalidMethods.map(method => {
         return request(app)
           [method]("/api/users")

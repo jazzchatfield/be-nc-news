@@ -59,9 +59,9 @@ const apiEndpoints = (req, res, next) => {
       method: "GET",
       responseKey: "comments",
       accepts:
-        "queries: sort_by (sorts by any valid column, defaults to created_at), order (asc or desc, defaults to desc)",
+        "queries: sort_by (sorts by any valid column, defaults to created_at), order (asc or desc, defaults to desc), limit (number of results, defaults to 10), p (page number, defaults to 0)",
       returns:
-        "an array of comments for the given article_id with properties: comment_id, votes, created_at, author, body"
+        "a key of comments with an array of comments for the given article_id with properties: comment_id, votes, created_at, author, body, plus a key of total_count for the number of comments there are not considering the limit and p"
     },
     {
       name: "GET /api/articles",
@@ -69,9 +69,9 @@ const apiEndpoints = (req, res, next) => {
       method: "GET",
       responseKey: "articles",
       accepts:
-        "queries: sort_by (sorts by any valid column, defaults to date), order (asc or desc, defaults to desc), author, topic",
+        "queries: sort_by (sorts by any valid column, defaults to date), order (asc or desc, defaults to desc), author, topic, limit (number of results, defaults to 10), p (page number, defaults to 0)",
       returns:
-        "an array of article objects with properties: author, title, article_id, topic, created_at, votes, comment_count"
+        "an object with a key of articles containing an array of article objects with properties: author, title, article_id, topic, created_at, votes, comment_count, plus a key of total_count for the number of articles there are not considering the limit and p"
     },
     {
       name: "PATCH /api/comments/:comment_id",
@@ -90,6 +90,50 @@ const apiEndpoints = (req, res, next) => {
       responseKey: null,
       accepts: null,
       returns: null
+    },
+    {
+      name: "POST /api/articles",
+      URL: "/api/articles",
+      method: "POST",
+      responseKey: "article",
+      accepts:
+        "body object with keys {title, body, topic, username} where the username and topic must be existing",
+      returns:
+        "created article object with properties: article_id, title, body, votes, topic, author, created_at"
+    },
+    {
+      name: "DELETE /api/articles/:article_id",
+      URL: "/api/articles/:article_id",
+      method: "DELETE",
+      responseKey: null,
+      accepts: null,
+      returns: null
+    },
+    {
+      name: "POST /api/topics",
+      URL: "/api/topics",
+      method: "POST",
+      responseKey: "topic",
+      accepts: "body object with keys {slug, description}",
+      returns: "created topic object with properties: slug, description"
+    },
+    {
+      name: "POST /api/users",
+      URL: "/api/users",
+      method: "POST",
+      responseKey: "user",
+      accepts:
+        "body object with keys {name, username, avatar_url} where avatar_url is optional",
+      returns: "created user object with properties: username, name, avatar_url"
+    },
+    {
+      name: "GET /api/users",
+      URL: "/api/users",
+      method: "GET",
+      responseKey: "users",
+      accepts: null,
+      returns:
+        "array of user objects with properties: name, username, avatar_url"
     }
   ];
   res.status(200).send({ endpoints });
