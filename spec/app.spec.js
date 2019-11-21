@@ -114,7 +114,7 @@ describe("/api", () => {
       });
     });
   });
-  describe("/articles", () => {
+  describe.only("/articles", () => {
     it("GET 200 responds with articles when not provided queries", () => {
       return request(app)
         .get("/api/articles")
@@ -259,6 +259,37 @@ describe("/api", () => {
         .then(res => {
           expect(res.body.msg).to.equal("author and topic do not exist");
         });
+    });
+    it("GET 200 defaults limit to 10", () => {
+      return request(app)
+        .get("/api/articles")
+        .expect(200)
+        .then(res => {
+          expect(res.body.articles.length).to.equal(10);
+        });
+    });
+    it("GET 200 limit query works", () => {
+      return request(app)
+        .get("/api/articles?limit=5")
+        .expect(200)
+        .then(res => {
+          expect(res.body.articles.length).to.equal(5);
+        });
+    });
+    it("GET 200 contains a count of the total articles before pagination", () => {
+      return request(app)
+        .get("/api/articles?limit=5&p=2")
+        .expect(200)
+        .then(res => {
+          expect(res.body.total_count).to.equal(12);
+        });
+    });
+    it("GET 200 page query works", () => {
+      const page1 = request(app).get("/api/articles?limit=5");
+      const page2 = request(app).get("/api/articles?limit=5&p=1");
+      return Promise.all([page1, page2]).then(([page1, page2]) => {
+        expect(page1.body.articles).to.not.eql(page2.body.articles);
+      });
     });
     it("PATCH/POST/DELETE 405 method not allowed", () => {
       const invalidMethods = ["patch", "post", "delete"];
@@ -519,6 +550,39 @@ describe("/api", () => {
             .then(res => {
               expect(res.body.msg).to.equal("sort_by column does not exist");
             });
+        });
+        it("GET 200 defaults limit to 10", () => {
+          return request(app)
+            .get("/api/articles/1/comments")
+            .expect(200)
+            .then(res => {
+              expect(res.body.comments.length).to.equal(10);
+            });
+        });
+        it("GET 200 limit query works", () => {
+          return request(app)
+            .get("/api/articles/1/comments?limit=5")
+            .expect(200)
+            .then(res => {
+              expect(res.body.comments.length).to.equal(5);
+            });
+        });
+        it("GET 200 contains a count of the total comments before pagination", () => {
+          return request(app)
+            .get("/api/articles/1/comments?limit=5&p=2")
+            .expect(200)
+            .then(res => {
+              expect(res.body.total_count).to.equal(13);
+            });
+        });
+        it("GET 200 page query works", () => {
+          const page1 = request(app).get("/api/articles/1/comments?limit=5");
+          const page2 = request(app).get(
+            "/api/articles/1/comments?limit=5&p=1"
+          );
+          return Promise.all([page1, page2]).then(([page1, page2]) => {
+            expect(page1.body.comments).to.not.eql(page2.body.comments);
+          });
         });
         it("PATCH/DELETE 405 method not allowed", () => {
           const invalidMethods = ["patch", "delete"];

@@ -40,8 +40,7 @@ const postCommentByArticle = (req, res, next) => {
 
 const getCommentsByArticle = (req, res, next) => {
   let { article_id } = req.params;
-  let { sort_by } = req.query;
-  let { order } = req.query;
+  let { sort_by, order, limit, p } = req.query;
 
   if (sort_by === undefined) {
     sort_by = "created_at";
@@ -49,18 +48,24 @@ const getCommentsByArticle = (req, res, next) => {
   if (order === undefined) {
     order = "desc";
   }
+  if (limit === undefined) {
+    limit = 10;
+  }
+  if (p === undefined) {
+    p = 0;
+  }
   if (order !== "asc" && order !== "desc") {
     next({ status: 400, msg: "order_by invalid" });
   } else
-    fetchCommentsByArticle(article_id, sort_by, order)
-      .then(comments => {
-        res.status(200).send({ comments });
+    fetchCommentsByArticle(article_id, sort_by, order, limit, p)
+      .then(([comments, total_count]) => {
+        res.status(200).send({ comments, total_count });
       })
       .catch(next);
 };
 
 const getArticles = (req, res, next) => {
-  let { sort_by, order, author, topic } = req.query;
+  let { sort_by, order, author, topic, limit, p } = req.query;
   if (sort_by === undefined) {
     sort_by = "created_at";
   }
@@ -73,12 +78,18 @@ const getArticles = (req, res, next) => {
   if (topic === undefined) {
     topic = "none";
   }
+  if (limit === undefined) {
+    limit = 10;
+  }
+  if (p === undefined) {
+    p = 0;
+  }
   if (order !== "asc" && order !== "desc") {
     next({ status: 400, msg: "order_by invalid" });
   }
-  fetchArticles(sort_by, order, author, topic)
-    .then(articles => {
-      res.status(200).send({ articles });
+  fetchArticles(sort_by, order, author, topic, limit, p)
+    .then(([articles, total_count]) => {
+      res.status(200).send({ articles, total_count });
     })
     .catch(next);
 };

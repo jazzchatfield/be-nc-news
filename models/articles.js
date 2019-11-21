@@ -98,7 +98,7 @@ const createCommentByArticle = (article_id, username, body) => {
 // };
 
 // NEW FETCHCOMMENTSBYARTICLE
-const fetchCommentsByArticle = (article_id, sort_by, order) => {
+const fetchCommentsByArticle = (article_id, sort_by, order, limit, p) => {
   return connection
     .select("*")
     .from("articles")
@@ -106,22 +106,33 @@ const fetchCommentsByArticle = (article_id, sort_by, order) => {
     .then(rows => {
       if (rows.length === 0) {
         return Promise.reject({ status: 404, msg: "article does not exist" });
-      } else
-        return connection
-          .select("*")
-          .from("comments")
-          .where({ article_id })
-          .orderBy(sort_by, order);
+      }
+      let grabCommentsPromise = connection
+        .select("*")
+        .from("comments")
+        .where({ article_id })
+        .limit(limit)
+        .offset(p * limit)
+        .orderBy(sort_by, order);
+
+      let grabTotalPromise = connection
+        .select("*")
+        .from("comments")
+        .where({ article_id });
+
+      return Promise.all([grabCommentsPromise, grabTotalPromise]);
     })
-    .then(rows => {
+    .then(([rows, total]) => {
       if (rows.length === 0) {
-        return rows;
-      } else
-        return rows.map(row => {
-          let newObj = { ...row };
-          delete newObj.article_id;
-          return newObj;
-        });
+        return [rows, 0];
+      }
+      let newRows = rows.map(row => {
+        let newObj = { ...row };
+        delete newObj.article_id;
+        return newObj;
+      });
+      let count = total.length;
+      return [newRows, count];
     });
 };
 
@@ -166,7 +177,7 @@ const fetchCommentsByArticle = (article_id, sort_by, order) => {
 // };
 
 // NEW FETCHARTICLES WITH JOIN QUERY
-const fetchArticles = (sort_by, order, author, topic) => {
+const fetchArticles = (sort_by, order, author, topic, limit, p) => {
   let findAuthor = connection
     .select("*")
     .from("users")
@@ -193,6 +204,8 @@ const fetchArticles = (sort_by, order, author, topic) => {
       "articles.votes"
     )
     .from("articles", "comments")
+    .limit(limit)
+    .offset(p * limit)
     .count({ comment_count: "comments.article_id" })
     .leftJoin("comments", "articles.article_id", "comments.article_id")
     .groupBy("articles.article_id")
@@ -209,15 +222,31 @@ const fetchArticles = (sort_by, order, author, topic) => {
       return rows;
     });
 
+  let getTotalCount = connection
+    .select("*")
+    .from("articles")
+    .modify(function(queryBuilder) {
+      if (author !== "none") {
+        queryBuilder.where({ author });
+      }
+      if (topic !== "none") {
+        queryBuilder.where({ topic });
+      }
+    })
+    .orderBy(sort_by, order)
+    .then(rows => {
+      return rows.length;
+    });
+
   if (author === "none" && topic === "none") {
-    return articleFinder;
+    return Promise.all([articleFinder, getTotalCount]);
   }
 
   if (author !== "none" && topic === "none") {
     return findAuthor.then(rows => {
       if (rows.length === 0) {
         return Promise.reject({ status: 404, msg: "author does not exist" });
-      } else return articleFinder;
+      } else return Promise.all([articleFinder, getTotalCount]);
     });
   }
 
@@ -225,7 +254,7 @@ const fetchArticles = (sort_by, order, author, topic) => {
     return findTopic.then(rows => {
       if (rows.length === 0) {
         return Promise.reject({ status: 404, msg: "topic does not exist" });
-      } else return articleFinder;
+      } else return Promise.all([articleFinder, getTotalCount]);
     });
   }
 
@@ -250,7 +279,7 @@ const fetchArticles = (sort_by, order, author, topic) => {
         });
       }
       if (author.length !== 0 && topic.length !== 0) {
-        return articleFinder;
+        return Promise.all([articleFinder, getTotalCount]);
       }
     });
   }
