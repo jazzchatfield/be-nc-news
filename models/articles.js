@@ -178,6 +178,7 @@ const fetchCommentsByArticle = (article_id, sort_by, order, limit, p) => {
 
 // NEW FETCHARTICLES WITH JOIN QUERY
 const fetchArticles = (sort_by, order, author, topic, limit, p) => {
+  console.log(sort_by);
   let findAuthor = connection
     .select("*")
     .from("users")
@@ -233,7 +234,6 @@ const fetchArticles = (sort_by, order, author, topic, limit, p) => {
         queryBuilder.where({ topic });
       }
     })
-    .orderBy(sort_by, order)
     .then(rows => {
       return rows.length;
     });

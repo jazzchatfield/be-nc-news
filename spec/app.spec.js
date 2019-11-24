@@ -87,7 +87,7 @@ describe("/api", () => {
       return Promise.all(promiseArray);
     });
   });
-  describe.only("/users", () => {
+  describe("/users", () => {
     it("GET 200 fetches all users", () => {
       return request(app)
         .get("/api/users")
@@ -193,7 +193,7 @@ describe("/api", () => {
       });
     });
   });
-  describe("/articles", () => {
+  describe.only("/articles", () => {
     it("GET 200 responds with articles when not provided queries", () => {
       return request(app)
         .get("/api/articles")
@@ -300,6 +300,11 @@ describe("/api", () => {
         .then(res => {
           expect(res.body.articles.length).to.equal(0);
         });
+    });
+    it("GET 200 can get articles by comment_count", () => {
+      return request(app)
+        .get("/api/articles?sort_by=comment_count&&order=desc")
+        .expect(200);
     });
     it("GET 400 sort_by invalid", () => {
       return request(app)
