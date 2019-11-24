@@ -93,9 +93,7 @@ const getArticles = (req, res, next) => {
     .then(([articles, total_count]) => {
       res.status(200).send({ articles, total_count });
     })
-    .catch(error => {
-      console.log(error);
-      next(error);
+    .catch(next);
     });
 };
 
