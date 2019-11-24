@@ -94,7 +94,6 @@ const getArticles = (req, res, next) => {
       res.status(200).send({ articles, total_count });
     })
     .catch(next);
-    });
 };
 
 const postArticle = (req, res, next) => {
