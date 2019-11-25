@@ -134,6 +134,14 @@ const apiEndpoints = (req, res, next) => {
       accepts: null,
       returns:
         "array of user objects with properties: name, username, avatar_url"
+    },
+    {
+      name: "DELETE /api/users/:username",
+      URL: "/api/users/:username",
+      method: "DELETE",
+      responseKey: null,
+      accepts: null,
+      returns: null
     }
   ];
   res.status(200).send({ endpoints });
