@@ -2,7 +2,8 @@ const express = require("express");
 const {
   getUserByUsername,
   postUser,
-  getUsers
+  getUsers,
+  deleteUser
 } = require("../controllers/users");
 const { send405Error } = require("../errors/index");
 
@@ -17,6 +18,7 @@ usersRouter
 usersRouter
   .route("/:username")
   .get(getUserByUsername)
+  .delete(deleteUser)
   .all(send405Error);
 
 module.exports = usersRouter;

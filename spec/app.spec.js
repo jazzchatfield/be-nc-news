@@ -157,7 +157,7 @@ describe("/api", () => {
       });
       return Promise.all(promiseArray);
     });
-    describe("/:username", () => {
+    describe.only("/:username", () => {
       it("GET 200 responds with user by username", () => {
         return request(app)
           .get("/api/users/lurker")
@@ -179,8 +179,13 @@ describe("/api", () => {
             expect(res.body.msg).to.eql("username not found");
           });
       });
-      it("POST/PATCH/DELETE 405 method not allowed", () => {
-        const invalidMethods = ["patch", "post", "delete"];
+      it("DELETE 204 deletes user", () => {
+        return request(app)
+          .delete("/api/users/butter_bridge")
+          .expect(204);
+      });
+      it("POST/PATCH 405 method not allowed", () => {
+        const invalidMethods = ["patch", "post"];
         const promiseArray = invalidMethods.map(method => {
           return request(app)
             [method]("/api/users/lurker")
@@ -193,7 +198,7 @@ describe("/api", () => {
       });
     });
   });
-  describe.only("/articles", () => {
+  describe("/articles", () => {
     it("GET 200 responds with articles when not provided queries", () => {
       return request(app)
         .get("/api/articles")

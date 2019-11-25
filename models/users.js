@@ -29,4 +29,41 @@ const fetchUsers = () => {
     });
 };
 
-module.exports = { fetchUserByUsername, createUser, fetchUsers };
+const removeUser = username => {
+  const getArticles = connection("articles")
+    .select("*")
+    .where({ author: username });
+
+  const deleteUserComments = connection("comments")
+    .del()
+    .where({ author: username });
+
+  const deleteArticles = connection("articles")
+    .del()
+    .where({ author: username });
+
+  const deleteUser = connection("users")
+    .del()
+    .where({ username });
+
+  return getArticles
+    .then(articles => {
+      const promiseArray = articles.map(article => {
+        return connection("comments")
+          .del()
+          .where({ article_id: article.article_id });
+      });
+      return Promise.all(promiseArray);
+    })
+    .then(() => {
+      return deleteUserComments;
+    })
+    .then(() => {
+      return deleteArticles;
+    })
+    .then(() => {
+      return deleteUser;
+    });
+};
+
+module.exports = { fetchUserByUsername, createUser, fetchUsers, removeUser };
